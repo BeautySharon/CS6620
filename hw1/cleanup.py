@@ -103,7 +103,7 @@ def main():
         except iam.exceptions.NoSuchEntityException:
             pass
 
-    print("\n🔥 CLEANUP COMPLETE")
+    print("CLEANUP COMPLETE")
     
 
 if __name__ == "__main__":
