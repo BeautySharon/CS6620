@@ -9,7 +9,7 @@ import urllib.error
 s3 = boto3.client("s3")
 
 # env vars
-BUCKET_NAME = os.environ["BUCKET_NAME"]
+BUCKET = os.environ.get("BUCKET_NAME", "hw2-sihui-testbucket")
 PLOT_API_URL = os.environ["PLOT_API_URL"]
 SLEEP_SECONDS = float(os.environ.get("SLEEP_SECONDS", "3.0"))
 
@@ -36,22 +36,22 @@ def lambda_handler(event, context):
     steps = []
 
     # create first object
-    s3.put_object(Bucket=BUCKET_NAME, Key=KEY1, Body=BODY1)
+    s3.put_object(Bucket=BUCKET, Key=KEY1, Body=BODY1)
     steps.append({"op": "PUT", "key": KEY1, "bytes": len(BODY1)})
     time.sleep(4.0)
 
     # update first object
-    s3.put_object(Bucket=BUCKET_NAME, Key=KEY1, Body=BODY1_UPDATED)
+    s3.put_object(Bucket=BUCKET, Key=KEY1, Body=BODY1_UPDATED)
     steps.append({"op": "PUT", "key": KEY1, "bytes": len(BODY1_UPDATED)})
     time.sleep(2.0)
 
     # delete first object
-    s3.delete_object(Bucket=BUCKET_NAME, Key=KEY1)
+    s3.delete_object(Bucket=BUCKET, Key=KEY1)
     steps.append({"op": "DELETE", "key": KEY1, "bytes": 0})
     time.sleep(2.0)
 
     # create second object
-    s3.put_object(Bucket=BUCKET_NAME, Key=KEY2, Body=BODY2)
+    s3.put_object(Bucket=BUCKET, Key=KEY2, Body=BODY2)
     steps.append({"op": "PUT", "key": KEY2, "bytes": len(BODY2)})
     time.sleep(1.0)
 
@@ -73,7 +73,7 @@ def lambda_handler(event, context):
         "statusCode": 200,
         "headers": {"Content-Type": "application/json"},
         "body": json.dumps({
-            "bucket": BUCKET_NAME,
+            "bucket": BUCKET,
             "sleep_seconds": SLEEP_SECONDS,
             "steps": steps,
             "plot_api_url": PLOT_API_URL,

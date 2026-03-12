@@ -1,0 +1,41 @@
+# Node dependencies
+node_modules/
+
+# CDK build output
+cdk.out/
+
+# TypeScript build files
+*.js
+*.d.ts
+*.map
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python cache (for Lambda code)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Python virtual environments
+.venv/
+venv/
+
+# IDE files
+.vscode/
+.idea/
+
+# Mac system files
+.DS_Store
