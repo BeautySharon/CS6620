@@ -1,0 +1,76 @@
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# =========================
+# AWS / Credentials
+# =========================
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+
+# =========================
+# CDK / Terraform / Infra
+# =========================
+cdk.out/
+*.cdk.staging/
+*.cdk.cache/
+
+# Terraform (如果你之前有用过)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Generated files
+# =========================
+*.png
+*.jpg
+*.jpeg
+*.csv
+
+# 但如果你想提交最终plot结果 👉 可以删掉这一行
+# plot.png
+
+# =========================
+# Node (如果你有用到 CDK JS tooling)
+# =========================
+node_modules/
+
+# =========================
+# Misc
+# =========================
+*.zip
+*.tar
+*.gz
