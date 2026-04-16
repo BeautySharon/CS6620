@@ -1,0 +1,118 @@
+version: "3.9"
+
+services:
+
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+  postgres-primary:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: twitter
+      POSTGRES_USER: twitter
+      POSTGRES_PASSWORD: twitter
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost replication replicator 0.0.0.0/0 scram-sha-256"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=3
+      -c max_replication_slots=3
+      -c hot_standby=on
+    volumes:
+      - pg_primary_data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d
+      - ./scripts/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twitter"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Microservices ───────────────────────────────────────────────────────────
+  user-service:
+    build:
+      context: ./services/user
+    environment:
+      PORT: 8081
+      POSTGRES_PRIMARY_URL: postgresql://twitter:twitter@postgres-primary:5432/twitter
+      JWT_SECRET: supersecretjwtkey
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+
+  tweet-service:
+    build:
+      context: ./services/tweet
+    environment:
+      PORT: 8082
+      POSTGRES_PRIMARY_URL: postgresql://twitter:twitter@postgres-primary:5432/twitter
+      REDIS_ADDR: redis:6379
+      JWT_SECRET: supersecretjwtkey
+      USE_REDIS: "true"
+      CONSISTENCY_MODE: "eventual"
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  timeline-service:
+    build:
+      context: ./services/timeline
+    environment:
+      PORT: 8083
+      POSTGRES_PRIMARY_URL: postgresql://twitter:twitter@postgres-primary:5432/twitter
+      REDIS_ADDR: redis:6379
+      JWT_SECRET: supersecretjwtkey
+      USE_REDIS: "true"
+      TWEET_SERVICE_URL: http://tweet-service:8082
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      tweet-service:
+        condition: service_started
+
+  gateway:
+    build:
+      context: ./services/gateway
+    environment:
+      PORT: 8080
+      REDIS_ADDR: redis:6379
+      USER_SERVICE_URL: http://user-service:8081
+      TWEET_SERVICE_URL: http://tweet-service:8082
+      TIMELINE_SERVICE_URL: http://timeline-service:8083
+      RATE_LIMIT_RPM: "5000"
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      tweet-service:
+        condition: service_started
+      timeline-service:
+        condition: service_started
+
+volumes:
+  pg_primary_data:
